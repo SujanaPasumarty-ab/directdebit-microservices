@@ -1,0 +1,14 @@
+# Terraform cache
+**/.terraform/
+
+# Terraform state
+*.tfstate
+*.tfstate.*
+
+# VS / .NET build artifacts
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.log

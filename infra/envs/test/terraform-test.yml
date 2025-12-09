@@ -1,0 +1,106 @@
+# ✅ Run automatically on all branches EXCEPT main
+trigger:
+  branches:
+    include:
+      - '*'            # all branches
+    exclude:
+      - main           # except main
+  paths:
+    include:
+      - infra/envs/test/**
+
+#  No PR validation pipeline needed for now (you can add later if you want)
+# pr:  (just omit the pr block entirely)
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- checkout: self
+
+# Install Terraform CLI (1.14.0)
+- task: Bash@3
+  displayName: 'Install Terraform CLI'
+  inputs:
+    targetType: 'inline'
+    script: |
+      set -euo pipefail
+      TF_VERSION="1.14.0"
+
+      sudo apt-get update -y
+      sudo apt-get install -y wget unzip
+      wget "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip"
+      unzip "terraform_${TF_VERSION}_linux_amd64.zip"
+      sudo mv terraform /usr/local/bin/terraform
+
+      echo "Terraform version in pipeline:"
+      terraform version
+
+# 1) Terraform init + plan (runs on EVERY branch except main, when files under infra/envs/test/ change)
+- task: AzureCLI@2
+  displayName: 'Terraform init & plan (TEST)'
+  inputs:
+    azureSubscription: 'SC-DD-CANCELSUB-TF-TEST-APPLY-OIDC'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    addSpnToEnvironment: true
+    inlineScript: |
+      set -euo pipefail
+
+      cd infra/envs/test
+      export TF_IN_AUTOMATION=true
+      export TF_LOG=DEBUG
+
+      subscriptionId=$(az account show --query id -o tsv)
+
+      # same OIDC wiring that worked for you
+      export ARM_TENANT_ID="$AZURESUBSCRIPTION_TENANT_ID"
+      export ARM_SUBSCRIPTION_ID="$subscriptionId"
+      export ARM_CLIENT_ID="$AZURESUBSCRIPTION_CLIENT_ID"
+      export ARM_OIDC_AZURE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
+      export ARM_USE_OIDC="true"
+      export ARM_USE_AZUREAD="true"
+      export ARM_DISABLE_AZURECLI_AUTH="true"
+
+      echo "==== DEBUG env dump start ===="
+      env | sort | grep -E 'ARM_|AZURESUBSCRIPTION_|SYSTEM_OIDC|TF_IN_AUTOMATION|TF_LOG' || true
+      echo "==== DEBUG env dump end ===="
+
+      echo "Terraform init"
+      terraform init -reconfigure -input=false
+
+      echo "Terraform plan"
+      terraform plan -out=tfplan -input=false -no-color
+  env:
+    ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
+
+# 2) Terraform apply (also runs for those branches – no main condition anymore)
+- task: AzureCLI@2
+  displayName: 'Terraform apply (TEST)'
+  # Default condition is "succeeded()" so you can omit it or leave as-is
+  condition: succeeded()
+  inputs:
+    azureSubscription: 'SC-DD-CANCELSUB-TF-TEST-APPLY-OIDC'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    addSpnToEnvironment: true
+    inlineScript: |
+      set -euo pipefail
+
+      cd infra/envs/test
+      export TF_IN_AUTOMATION=true
+
+      subscriptionId=$(az account show --query id -o tsv)
+
+      export ARM_TENANT_ID="$AZURESUBSCRIPTION_TENANT_ID"
+      export ARM_SUBSCRIPTION_ID="$subscriptionId"
+      export ARM_CLIENT_ID="$AZURESUBSCRIPTION_CLIENT_ID"
+      export ARM_OIDC_AZURE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
+      export ARM_USE_OIDC="true"
+      export ARM_USE_AZUREAD="true"
+      export ARM_DISABLE_AZURECLI_AUTH="true"
+
+      echo "Terraform apply"
+      terraform apply -auto-approve tfplan
+  env:
+    ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)

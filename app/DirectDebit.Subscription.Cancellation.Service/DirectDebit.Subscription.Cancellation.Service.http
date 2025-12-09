@@ -1,0 +1,6 @@
+@DirectDebit.Subscription.Cancellation.Service_HostAddress = http://localhost:52799
+
+POST {{DirectDebit.Subscription.Cancellation.Service_HostAddress}}/api/DirectDebitSubscriptionCancellation/ProcessDirectDebitSubscriptionCancellation/28eb63bf-af2c-44a7-ae25-4df689eaa028
+Accept: application/json
+
+###

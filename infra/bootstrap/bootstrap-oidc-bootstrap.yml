@@ -1,0 +1,56 @@
+trigger: none   # run manually only
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  azdoOrgUrl: 'https://dev.azure.com/adarodirect'
+  azdoProjectName: 'Cancellation Subscription'
+  tenantId: '865fba07-c3eb-48cb-ad0e-e90464acda61'
+
+steps:
+- checkout: self
+
+
+# Install Terraform CLI on the agent
+- task: Bash@3
+  displayName: 'Install Terraform CLI'
+  inputs:
+    targetType: 'inline'
+    script: |
+      sudo apt-get update -y
+      sudo apt-get install -y wget unzip
+      wget https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip
+      unzip terraform_1.9.5_linux_amd64.zip
+      sudo mv terraform /usr/local/bin/
+      terraform version
+
+- task: Bash@3
+  displayName: 'Terraform init & apply (bootstrap)'
+  env:
+    # These must be defined as pipeline variables (secrets for the sensitive ones)
+    AZDO_PERSONAL_ACCESS_TOKEN: $(AZDO_PAT)
+    ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+    ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+    ARM_TENANT_ID: $(tenantId)
+    ARM_SUBSCRIPTION_ID: $(subscription_id)
+  inputs:
+    targetType: 'inline'
+    script: |
+      set -e
+      cd infra/bootstrap
+
+      # Throw away any stale local backend metadata and re-init
+      rm -rf .terraform
+
+      # First time after adding backend: migrate local → remote
+      terraform init -migrate-state -input=false
+
+      terraform apply -auto-approve \
+        -var="azdo_org_url=$(azdoOrgUrl)" \
+        -var="azdo_project_name=$(azdoProjectName)" \
+        -var="azdo_pat=${AZDO_PERSONAL_ACCESS_TOKEN}" \
+        -var="tenant_id=$(tenantId)" \
+        -var="arm_client_id=${ARM_CLIENT_ID}" \
+        -var="arm_client_secret=${ARM_CLIENT_SECRET}"
+

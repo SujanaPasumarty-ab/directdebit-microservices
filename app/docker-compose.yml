@@ -1,0 +1,11 @@
+services:
+  directdebit.subscription.cancellation.service:
+    image: ${DOCKER_REGISTRY-}directdebitsubscriptioncancellationservice
+    build:
+      context: .
+      dockerfile: DirectDebit.Subscription.Cancellation.Service/Dockerfile
+    ports:
+      - "15077:15077"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Development

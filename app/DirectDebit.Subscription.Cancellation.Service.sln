@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11123.170
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectDebit.Subscription.Cancellation.Service", "DirectDebit.Subscription.Cancellation.Service\DirectDebit.Subscription.Cancellation.Service.csproj", "{2E4A1E03-CDB1-D69F-0400-0221869C886D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectDebit.Subscription.Cancellation.Service.AppHost", "DirectDebit.Subscription.Cancellation.Service.AppHost\DirectDebit.Subscription.Cancellation.Service.AppHost.csproj", "{AF5CD3AD-580E-4007-AB6F-32D855FF5049}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectDebit.Subscription.Cancellation.Service.ServiceDefaults", "DirectDebit.Subscription.Cancellation.Service.ServiceDefaults\DirectDebit.Subscription.Cancellation.Service.ServiceDefaults.csproj", "{38077D75-F0BE-82C4-2146-15296ABF3247}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectDebit.Subscription.Cancellation.Service.Library", "DirectDebit.Subscription.Cancellation.Service.Library\DirectDebit.Subscription.Cancellation.Service.Library.csproj", "{0AD633DA-836E-4A31-954A-B498EBE3DC0F}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectDebit.Subscription.Cancellation.Service.Test", "DirectDebit.Subscription.Cancellation.Service.Test\DirectDebit.Subscription.Cancellation.Service.Test.csproj", "{3444CAE9-CD9C-4869-9A82-9B4C3AD51086}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E4A1E03-CDB1-D69F-0400-0221869C886D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E4A1E03-CDB1-D69F-0400-0221869C886D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E4A1E03-CDB1-D69F-0400-0221869C886D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E4A1E03-CDB1-D69F-0400-0221869C886D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF5CD3AD-580E-4007-AB6F-32D855FF5049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF5CD3AD-580E-4007-AB6F-32D855FF5049}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF5CD3AD-580E-4007-AB6F-32D855FF5049}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF5CD3AD-580E-4007-AB6F-32D855FF5049}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38077D75-F0BE-82C4-2146-15296ABF3247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38077D75-F0BE-82C4-2146-15296ABF3247}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38077D75-F0BE-82C4-2146-15296ABF3247}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38077D75-F0BE-82C4-2146-15296ABF3247}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AD633DA-836E-4A31-954A-B498EBE3DC0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AD633DA-836E-4A31-954A-B498EBE3DC0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AD633DA-836E-4A31-954A-B498EBE3DC0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AD633DA-836E-4A31-954A-B498EBE3DC0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3444CAE9-CD9C-4869-9A82-9B4C3AD51086}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3444CAE9-CD9C-4869-9A82-9B4C3AD51086}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3444CAE9-CD9C-4869-9A82-9B4C3AD51086}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3444CAE9-CD9C-4869-9A82-9B4C3AD51086}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {74E9B3B6-B5B2-44DF-8A7D-9A347B86FD8B}
+	EndGlobalSection
+EndGlobal

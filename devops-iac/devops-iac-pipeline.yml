@@ -1,0 +1,81 @@
+# .azuredevops/terraform-devops-iac.yml
+
+# ✅ Auto CI on all branches EXCEPT main, only when devops-iac/ changes
+trigger:
+  branches:
+    include:
+      - '*'
+    exclude:
+      - main
+  paths:
+    include:
+      - devops-iac/**
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- checkout: self
+
+# Install Terraform (same style as test pipeline)
+- task: Bash@3
+  displayName: 'Install Terraform CLI'
+  inputs:
+    targetType: 'inline'
+    script: |
+      set -euo pipefail
+      TF_VERSION="1.14.0"
+
+      sudo apt-get update -y
+      sudo apt-get install -y wget unzip
+      wget "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip"
+      unzip "terraform_${TF_VERSION}_linux_amd64.zip"
+      sudo mv terraform /usr/local/bin/terraform
+
+      echo "Terraform version in pipeline:"
+      terraform version
+
+# Terraform init + plan + apply for devops-iac using SAME OIDC pattern as test
+- task: AzureCLI@2
+  displayName: 'Terraform init/plan/apply (devops-iac)'
+  inputs:
+    azureSubscription: 'SC-DD-CANCELSUB-TF-TEST-APPLY-OIDC'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    addSpnToEnvironment: true
+    inlineScript: |
+      set -euo pipefail
+
+      cd devops-iac
+      export TF_IN_AUTOMATION=true
+      export TF_LOG=DEBUG
+
+      subscriptionId=$(az account show --query id -o tsv)
+
+      # EXACTLY the same OIDC wiring as terraform-test.yml
+      export ARM_TENANT_ID="$AZURESUBSCRIPTION_TENANT_ID"
+      export ARM_SUBSCRIPTION_ID="$subscriptionId"
+      export ARM_CLIENT_ID="$AZURESUBSCRIPTION_CLIENT_ID"
+      export ARM_OIDC_AZURE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
+      export ARM_USE_OIDC="true"
+      export ARM_USE_AZUREAD="true"
+      export ARM_DISABLE_AZURECLI_AUTH="true"
+
+      echo "==== DEBUG env dump start ===="
+      env | sort | grep -E 'ARM_|AZURESUBSCRIPTION_|SYSTEM_OIDC|TF_IN_AUTOMATION|TF_LOG' || true
+      echo "==== DEBUG env dump end ===="
+
+      echo "Terraform init..."
+      terraform init -reconfigure -input=false
+
+      echo "Terraform plan..."
+      terraform plan -out=tfplan -input=false -no-color
+
+      echo "Terraform apply..."
+      terraform apply -auto-approve tfplan
+  env:
+    ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
+
+    # Extra for azuredevops provider (not used in test, but needed here)
+    AZDO_ORG_SERVICE_URL: $(System.CollectionUri)
+    AZDO_PERSONAL_ACCESS_TOKEN: $(System.AccessToken)

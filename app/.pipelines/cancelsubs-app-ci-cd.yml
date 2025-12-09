@@ -1,0 +1,123 @@
+# =====================================
+#  CI/CD PIPELINE - Cancellation Service (Containerized)
+#  Build (.NET 9) → Docker → Deploy Test (Linux container)
+# =====================================
+
+trigger:
+  branches:
+    include:
+      - "*"        # run on every branch
+
+pr:
+  branches:
+    include:
+      - test
+
+variables:
+  buildConfiguration: 'Release'
+
+  system.debug: true
+
+  # ARM service connection used for Web App
+  serviceConnection: 'SC-DD-CANCELSUB-APP-TEST'
+
+  # Docker Registry service connection to ACR
+  dockerServiceConnection: 'SC-DD-CANCELSUB-ACR-TF'
+
+  # Test App Service name
+  webAppNameTest: 'dd-cancelsubs-test-web'
+
+  # Project & Dockerfile paths
+  projectPath: 'app/DirectDebit.Subscription.Cancellation.Service/DirectDebit.Subscription.Cancellation.Service.csproj'
+  dockerfilePath: 'app/DirectDebit.Subscription.Cancellation.Service/Dockerfile'
+
+  # ACR details
+  acrLoginServer: 'adaroacrmicroserviceukstest.azurecr.io'
+  imageRepository: 'cancel-subscription-service'
+
+stages:
+
+# =========================
+# 1️ BUILD & PUSH IMAGE
+# =========================
+- stage: Build
+  displayName: 'Build .NET + Docker push'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build .NET service & push image'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+
+    - checkout: self
+      persistCredentials: true
+
+    # Use .NET 9 SDK
+    - task: UseDotNet@2
+      displayName: 'Use .NET 9 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '9.x'
+        includePreviewVersions: true
+
+    # Restore
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore'
+      inputs:
+        command: 'restore'
+        projects: '$(projectPath)'
+
+    # Build
+    - task: DotNetCoreCLI@2
+      displayName: 'Build'
+      inputs:
+        command: 'build'
+        projects: '$(projectPath)'
+        arguments: '--configuration $(buildConfiguration)'
+
+    # 🔹 Build AND push Docker image to ACR using service connection
+    - task: Docker@2
+      displayName: 'Build and push image to ACR'
+      inputs:
+        command: 'buildAndPush'
+        containerRegistry: '$(dockerServiceConnection)'   # SC-DD-CANCELSUB-ACR-MANUAL
+        repository: '$(imageRepository)'                  # cancelsubs-api
+        dockerfile: '$(dockerfilePath)'
+        buildContext: '$(Build.SourcesDirectory)/app'
+        tags: |
+          $(Build.BuildId)
+          latest
+
+# =========================
+# 2️ DEPLOY TO TEST
+# =========================
+- stage: Deploy_Test
+  displayName: 'Deploy to Test'
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+  - job: DeployTest
+    displayName: 'Deploy Test Web App (container)'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+      # Small debug echo so we can see exactly what image is being used
+      - script: |
+          echo "ACR login server: $(acrLoginServer)"
+          echo "Image repository: $(imageRepository)"
+          echo "Build ID: $(Build.BuildId)"
+          echo "Full image: $(acrLoginServer)/$(imageRepository):$(Build.BuildId)"
+        displayName: 'Debug: show image details'
+
+      # ✅ Container-specific deploy task (no zip, no package)
+      - task: AzureWebAppContainer@1
+        displayName: 'Deploy container image to Test Web App'
+        inputs:
+          azureSubscription: '$(serviceConnection)'
+          appName: '$(webAppNameTest)'
+          # Always deploy the latest tag (which *does* exist in ACR)
+          imageName: '$(acrLoginServer)/$(imageRepository):latest'
+
